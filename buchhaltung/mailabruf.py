@@ -7,6 +7,7 @@ erst nach Bestätigung.
 """
 
 import email
+import hashlib
 import imaplib
 import os
 import re
@@ -21,6 +22,7 @@ from django.utils import timezone
 from .models import Beleg, MailKonto, ZuordnungsRegel
 
 BELEG_ENDUNGEN = (".pdf", ".xml", ".jpg", ".jpeg", ".png")
+BESTELL_STICHWORTE = re.compile(r"bestell|bestätigung|gekauft|kauf|order|zahlung|payment", re.I)
 RECHNUNG_STICHWORTE = re.compile(r"rechnung|invoice|beleg|quittung|receipt|gutschrift|e-rechnung|zugferd|xrechnung", re.I)
 MARKTPLAETZE = [
     (re.compile(r"amazon\.", re.I), Beleg.Quelle.AMAZON),
@@ -69,12 +71,16 @@ def verarbeite_nachricht(roh, konto, ergebnis):
     except (TypeError, ValueError):
         empfangen = None
     teile = list(anhaenge(nachricht))
-    if konto.nur_rechnungen and not (
+    quelle = next((q for muster, q in MARKTPLAETZE if muster.search(absender)), Beleg.Quelle.MAIL)
+    if not teile and quelle != Beleg.Quelle.MAIL and (BESTELL_STICHWORTE.search(betreff) or RECHNUNG_STICHWORTE.search(betreff)):
+        # Amazon und eBay schicken Bestell- und Zahlungsbestätigungen ohne Anhang:
+        # die ganze Mail wird im Originalformat (.eml) als Beleg abgelegt.
+        teile = [(f"{quelle}-{(empfangen or timezone.now()):%Y-%m-%d}-{hashlib.sha256(roh).hexdigest()[:10]}.eml", roh)]
+    elif konto.nur_rechnungen and not (
         RECHNUNG_STICHWORTE.search(betreff) or any(RECHNUNG_STICHWORTE.search(n) for n, _ in teile)
     ):
         return
     regel = bereich_vorschlag(absender, betreff)
-    quelle = next((q for muster, q in MARKTPLAETZE if muster.search(absender)), Beleg.Quelle.MAIL)
     if regel and regel.quelle:
         quelle = regel.quelle
     for name, inhalt in teile:

@@ -48,10 +48,13 @@ class MailabrufTest(TestCase):
             5: mail("Amazon.de <auto-confirm@amazon.de>", "Ihre Rechnung zur Bestellung 302-1", "Rechnung.pdf"),
             6: mail("Newsletter <news@shop.de>", "Angebote der Woche", "prospekt.pdf", b"%PDF prospekt"),
             7: mail("Discovery <billing@discovery.com>", "Purchase Order 3900031660", "invoice_3900031660.pdf", b"%PDF po"),
-            8: mail("eBay <ebay@ebay.de>", "Rechnung", None),
+            8: mail("eBay <ebay@ebay.de>", "Bestellbestätigung: USB-Mikrofon", None),
+            9: mail("Shop <info@shop.de>", "Ihre Bestellung", None),
         })
         e = rufe_konto_ab(self.konto, verbindung=imap)
-        self.assertEqual((e.mails_geprueft, e.belege_neu, e.duplikate), (4, 2, 0))
+        self.assertEqual((e.mails_geprueft, e.belege_neu, e.duplikate), (5, 3, 0))
+        ebay = Beleg.objects.get(quelle=Beleg.Quelle.EBAY)
+        self.assertTrue(ebay.originalname.endswith(".eml"))
         amazon = Beleg.objects.get(originalname="Rechnung.pdf")
         self.assertEqual(amazon.quelle, Beleg.Quelle.AMAZON)
         self.assertIsNone(amazon.vorschlag_mandant)
@@ -59,7 +62,7 @@ class MailabrufTest(TestCase):
         self.assertEqual(po.vorschlag_mandant.kuerzel, "FFS")
         self.assertEqual(po.status, Beleg.Status.NEU)
         self.konto.refresh_from_db()
-        self.assertEqual(self.konto.letzte_uid, 8)
+        self.assertEqual(self.konto.letzte_uid, 9)
         self.assertTrue(imap.abgemeldet)
 
     def test_zweiter_abruf_holt_nur_neue_und_erkennt_duplikate(self):
