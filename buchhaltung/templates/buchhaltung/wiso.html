@@ -1,0 +1,18 @@
+{% extends "buchhaltung/basis.html" %}
+{% block titel %}WISO {{ jahr|stringformat:"d" }}{% endblock %}
+{% block inhalt %}
+<h1>Was trage ich in WISO ein? {{ jahr|stringformat:"d" }} {% include "buchhaltung/_jahr.html" %}</h1>
+{% for mandant, teil in betriebe.items %}
+<h2>{{ mandant.name }}: {{ teil.formulare }}</h2>
+{% with e=teil.euer %}{% include "buchhaltung/_euer_tabelle.html" %}{% endwith %}
+{% endfor %}
+<h2>Umsatzsteuer-Jahreserklärung (FFS + FFD)</h2>
+<div class="tabelle"><table>
+  <tr><th>Feld</th><th class="betrag">Jahr</th></tr>
+  <tr><td>Umsätze 19 % (netto)</td><td class="betrag">{{ ust_jahr.kz81|floatformat:"0g" }} €</td></tr>
+  <tr><td>Umsätze 7 % (netto)</td><td class="betrag">{{ ust_jahr.kz86|floatformat:"0g" }} €</td></tr>
+  <tr><td>Vorsteuer</td><td class="betrag">{{ ust_jahr.kz66|floatformat:"2g" }} €</td></tr>
+  <tr class="summe"><td>Verbleibende USt vor Vorauszahlungen</td><td class="betrag">{{ ust_jahr.kz83|floatformat:"2g" }} €</td></tr>
+  <tr><td class="leise">Summe der vier Voranmeldungen</td><td class="betrag leise">{% for u in quartale %}{{ u.kz83|floatformat:"2g" }}{% if not forloop.last %} + {% endif %}{% endfor %}</td></tr>
+</table></div>
+{% endblock %}

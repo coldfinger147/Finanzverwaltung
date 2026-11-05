@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titel %}Finanz-Cockpit{% endblock %}</title>
+<style>
+  :root { --text:#1d1d1f; --leise:#6b6b70; --linie:#e2e2e6; --flaeche:#f6f6f8; --akzent:#2f6fde; --rot:#c0392b; --gruen:#1e8449; }
+  @media (prefers-color-scheme: dark) { :root { --text:#ececf1; --leise:#a0a0aa; --linie:#3a3a40; --flaeche:#1c1c20; --akzent:#6fa0ff; --rot:#ff7b6b; --gruen:#5fd38d; } body { background:#121214; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--text); background:#fff; }
+  header { display:flex; gap:16px; flex-wrap:wrap; align-items:center; padding:12px 16px; border-bottom:1px solid var(--linie); }
+  header strong { margin-right:auto; }
+  header a { color:var(--akzent); text-decoration:none; }
+  main { max-width:960px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  h2 { font-size:17px; margin:24px 0 8px; }
+  .karten { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .karte { background:var(--flaeche); border:1px solid var(--linie); border-radius:10px; padding:12px 14px; }
+  .karte .zahl { font-size:22px; font-weight:600; }
+  .leise { color:var(--leise); }
+  .rot { color:var(--rot); } .gruen { color:var(--gruen); }
+  .tabelle { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--linie); vertical-align:top; }
+  td.betrag, th.betrag { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  tr.summe td { font-weight:600; border-top:2px solid var(--text); }
+  ul.hinweise { padding-left:18px; }
+  form.jahr { display:inline; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Finanz-Cockpit</strong>
+  <a href="{% url 'buchhaltung:uebersicht' %}">Übersicht</a>
+  <a href="{% url 'buchhaltung:ust_va' %}">USt-VA</a>
+  <a href="{% url 'buchhaltung:euer' 'FFS' %}">EÜR FFS</a>
+  <a href="{% url 'buchhaltung:euer' 'FFD' %}">EÜR FFD</a>
+  <a href="{% url 'buchhaltung:wiso' %}">WISO</a>
+  <a href="{% url 'admin:buchhaltung_buchung_changelist' %}">Buchungen</a>
+</header>
+<main>{% block inhalt %}{% endblock %}</main>
+</body>
+</html>

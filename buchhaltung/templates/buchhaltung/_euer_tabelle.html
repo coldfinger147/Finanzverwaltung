@@ -1,0 +1,9 @@
+<div class="tabelle"><table>
+  <tr><th>Zeile</th><th>Feld</th><th class="betrag">Betrag</th></tr>
+  {% for p in e.einnahmen %}<tr><td>{{ p.zeile|default:"?" }}{% if p.zeile and not p.geprueft %}*{% endif %}</td><td>{{ p.bezeichnung }}</td><td class="betrag">{{ p.betrag|floatformat:"2g" }} €</td></tr>{% endfor %}
+  <tr class="summe"><td></td><td>Summe Betriebseinnahmen</td><td class="betrag">{{ e.summe_einnahmen|floatformat:"2g" }} €</td></tr>
+  {% for p in e.ausgaben %}<tr><td>{{ p.zeile|default:"?" }}{% if p.zeile and not p.geprueft %}*{% endif %}</td><td>{{ p.bezeichnung }}</td><td class="betrag">{{ p.betrag|floatformat:"2g" }} €</td></tr>{% endfor %}
+  <tr class="summe"><td></td><td>Summe Betriebsausgaben</td><td class="betrag">{{ e.summe_ausgaben|floatformat:"2g" }} €</td></tr>
+  <tr class="summe"><td></td><td>Gewinn / Verlust</td><td class="betrag">{{ e.gewinn|floatformat:"2g" }} €</td></tr>
+</table></div>
+{% if e.hinweise %}<ul class="hinweise">{% for h in e.hinweise %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}

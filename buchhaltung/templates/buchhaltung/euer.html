@@ -1,0 +1,7 @@
+{% extends "buchhaltung/basis.html" %}
+{% block titel %}EÜR {{ e.mandant.kuerzel }} {{ jahr|stringformat:"d" }}{% endblock %}
+{% block inhalt %}
+<h1>EÜR {{ e.mandant.name }} {{ jahr|stringformat:"d" }} {% include "buchhaltung/_jahr.html" %}</h1>
+{% include "buchhaltung/_euer_tabelle.html" %}
+<p class="leise">„?“ = Zeilennummer für dieses Jahr noch nicht gepflegt, „*“ = noch nicht gegen das amtliche Formular geprüft.</p>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "buchhaltung/basis.html" %}
+{% block titel %}USt-VA {{ jahr|stringformat:"d" }}{% endblock %}
+{% block inhalt %}
+<h1>Umsatzsteuer-Voranmeldung {{ jahr|stringformat:"d" }} {% include "buchhaltung/_jahr.html" %}</h1>
+<p class="leise">Vierteljährlich, FFS und FFD zusammen, nach Zahlungsdatum (Ist-Versteuerung). Bemessungsgrundlagen auf volle Euro abgerundet.</p>
+<div class="tabelle"><table>
+  <tr><th>Kennzahl</th>{% for q, u in quartale %}<th class="betrag">Q{{ q }}</th>{% endfor %}</tr>
+  <tr><td>Kz. 81 Umsätze 19 % (netto)</td>{% for q, u in quartale %}<td class="betrag">{{ u.kz81|floatformat:"0g" }}</td>{% endfor %}</tr>
+  <tr><td class="leise">Steuer darauf</td>{% for q, u in quartale %}<td class="betrag leise">{{ u.kz81_steuer|floatformat:"2g" }}</td>{% endfor %}</tr>
+  <tr><td>Kz. 86 Umsätze 7 % (netto)</td>{% for q, u in quartale %}<td class="betrag">{{ u.kz86|floatformat:"0g" }}</td>{% endfor %}</tr>
+  <tr><td class="leise">Steuer darauf</td>{% for q, u in quartale %}<td class="betrag leise">{{ u.kz86_steuer|floatformat:"2g" }}</td>{% endfor %}</tr>
+  <tr><td>Kz. 66 Vorsteuer</td>{% for q, u in quartale %}<td class="betrag">{{ u.kz66|floatformat:"2g" }}</td>{% endfor %}</tr>
+  <tr class="summe"><td>Kz. 83 Vorauszahlung / Überschuss (−)</td>{% for q, u in quartale %}<td class="betrag">{{ u.kz83|floatformat:"2g" }}</td>{% endfor %}</tr>
+  <tr><td class="leise">Buchungen / davon zu prüfen</td>{% for q, u in quartale %}<td class="betrag leise">{{ u.anzahl_buchungen }} / {{ u.offene_pruefungen }}</td>{% endfor %}</tr>
+</table></div>
+{% endblock %}
