@@ -12,7 +12,7 @@ def mail(absender, betreff, anhang=None, inhalt=b"%PDF-1.4 rechnung"):
     m["From"] = absender
     m["Subject"] = betreff
     m["Date"] = "Wed, 04 Nov 2026 10:00:00 +0100"
-    m["Message-ID"] = f"<{betreff}@test>"
+    m["Message-ID"] = f"<{abs(len(betreff))}-{betreff.encode().hex()[:12]}@test>"
     m.set_content("Hallo")
     if anhang:
         m.add_attachment(inhalt, maintype="application", subtype="pdf", filename=anhang)
