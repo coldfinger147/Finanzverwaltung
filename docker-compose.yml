@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  cockpit:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - belege:/app/daten/belege
+    # Nur lokal erreichbar. Auf dem Mini-PC kommt der Zugriff über Tailscale.
+    ports:
+      - "127.0.0.1:8000:8000"
+
+volumes:
+  postgres:
+  belege:

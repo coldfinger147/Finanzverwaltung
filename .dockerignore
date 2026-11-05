@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+daten/*
+!daten/.gitkeep
+# Echte Finanzdaten gehören nie ins Repository
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pdf
+.git/

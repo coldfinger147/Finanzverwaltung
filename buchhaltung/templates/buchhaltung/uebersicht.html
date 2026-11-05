@@ -1,0 +1,31 @@
+{% extends "buchhaltung/basis.html" %}
+{% block inhalt %}
+<h1>Übersicht</h1>
+<div class="karten">
+  <div class="karte">
+    <div class="leise">USt-VA Q{{ quartal }}/{{ jahr|stringformat:"d" }} (bisher)</div>
+    <div class="zahl {% if ust.ist_erstattung %}gruen{% endif %}">{{ ust.kz83|floatformat:"2g" }} €</div>
+    <div class="leise">{% if ust.ist_erstattung %}Erstattung{% else %}Zahllast{% endif %}</div>
+  </div>
+  <div class="karte">
+    <div class="leise">Zu prüfen</div>
+    <div class="zahl {% if zu_pruefen %}rot{% endif %}">{{ zu_pruefen }}</div>
+    <div><a href="{% url 'admin:buchhaltung_buchung_changelist' %}?pruefen__exact=1">Liste öffnen</a></div>
+  </div>
+  <div class="karte">
+    <div class="leise">Buchungen ohne Beleg</div>
+    <div class="zahl {% if ohne_beleg %}rot{% endif %}">{{ ohne_beleg }}</div>
+    <div><a href="{% url 'admin:buchhaltung_buchung_changelist' %}?beleg__isempty=1">Liste öffnen</a></div>
+  </div>
+</div>
+
+<h2>Letzte Buchungen</h2>
+<div class="tabelle"><table>
+  <tr><th>Beleg</th><th>Datum</th><th>Bereich</th><th>Text</th><th class="betrag">Brutto</th></tr>
+  {% for b in letzte %}
+  <tr><td>{{ b.belegnummer }}</td><td>{{ b.datum|date:"d.m.Y" }}</td><td>{{ b.mandant.kuerzel }}</td><td>{{ b.text }}{% if b.pruefen %} <span class="rot">prüfen</span>{% endif %}</td><td class="betrag">{{ b.brutto|floatformat:"2g" }} €</td></tr>
+  {% empty %}
+  <tr><td colspan="5" class="leise">Noch keine Buchungen. Import: <code>python manage.py importiere_tunger_excel datei.xlsx</code></td></tr>
+  {% endfor %}
+</table></div>
+{% endblock %}
