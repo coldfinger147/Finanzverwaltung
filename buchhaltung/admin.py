@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Beleg, Buchung, FormularZeile, Kategorie, Mandant, Protokoll
+from .models import Beleg, Buchung, FormularZeile, Kategorie, MailKonto, Mandant, Protokoll, ZuordnungsRegel
 
 admin.site.disable_action("delete_selected")
 
@@ -29,10 +29,11 @@ class FormularZeileAdmin(admin.ModelAdmin):
 
 @admin.register(Beleg)
 class BelegAdmin(admin.ModelAdmin):
-    list_display = ["originalname", "quelle", "erfasst_am", "datei_link"]
-    list_filter = ["quelle"]
-    search_fields = ["originalname", "notiz"]
-    readonly_fields = ["originalname", "sha256", "erfasst_am"]
+    list_display = ["originalname", "status", "quelle", "vorschlag_mandant", "absender", "empfangen_am", "datei_link"]
+    list_filter = ["status", "quelle", "vorschlag_mandant"]
+    list_editable = ["status", "vorschlag_mandant"]
+    search_fields = ["originalname", "notiz", "absender", "betreff"]
+    readonly_fields = ["originalname", "sha256", "erfasst_am", "absender", "betreff", "empfangen_am", "herkunft_id"]
 
     def get_readonly_fields(self, request, obj=None):
         return self.readonly_fields + (["datei"] if obj else [])
@@ -111,3 +112,15 @@ class ProtokollAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(MailKonto)
+class MailKontoAdmin(admin.ModelAdmin):
+    list_display = ["name", "benutzer", "host", "aktiv", "zuletzt_abgerufen"]
+    readonly_fields = ["letzte_uid", "zuletzt_abgerufen"]
+
+
+@admin.register(ZuordnungsRegel)
+class ZuordnungsRegelAdmin(admin.ModelAdmin):
+    list_display = ["muster", "feld", "mandant", "quelle", "reihenfolge"]
+    list_editable = ["reihenfolge"]

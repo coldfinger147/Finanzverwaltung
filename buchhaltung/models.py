@@ -8,6 +8,7 @@ Grundsätze (GoBD):
 """
 
 import hashlib
+import re
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
@@ -116,6 +117,7 @@ class Beleg(models.Model):
         UPLOAD = "upload", "Upload"
         MAIL = "mail", "E-Mail"
         AMAZON = "amazon", "Amazon"
+        EBAY = "ebay", "eBay"
         SCAN = "scan", "Scan / Foto"
         IMPORT = "import", "Import"
         RECHNUNG = "rechnung", "Eigene Ausgangsrechnung"
@@ -124,6 +126,21 @@ class Beleg(models.Model):
     originalname = models.CharField(max_length=255, editable=False)
     sha256 = models.CharField(max_length=64, unique=True, editable=False)
     quelle = models.CharField(max_length=10, choices=Quelle.choices, default=Quelle.UPLOAD)
+    class Status(models.TextChoices):
+        NEU = "neu", "Neu, noch nicht zugeordnet"
+        ZUGEORDNET = "zugeordnet", "Gebucht"
+        IGNORIERT = "ignoriert", "Kein Beleg / ignoriert"
+
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEU)
+    vorschlag_mandant = models.ForeignKey(
+        Mandant, on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Vorschlag Bereich"
+    )
+    absender = models.CharField(max_length=255, blank=True)
+    betreff = models.CharField(max_length=255, blank=True)
+    empfangen_am = models.DateTimeField(null=True, blank=True)
+    herkunft_id = models.CharField(
+        "Herkunfts-ID", max_length=255, blank=True, help_text="Message-ID der Mail oder Bestellnummer."
+    )
     notiz = models.CharField(max_length=255, blank=True)
     erfasst_am = models.DateTimeField(auto_now_add=True)
 
@@ -337,3 +354,55 @@ def protokolliere(obj, aktion, vorher=None):
         nachher=None if aktion == "gelöscht" else _als_dict(obj),
     )
 
+
+
+class MailKonto(models.Model):
+    """Postfach, aus dem Rechnungsanhänge abgeholt werden. Das Passwort steht nie in der Datenbank."""
+
+    name = models.CharField(max_length=60, unique=True)
+    host = models.CharField(max_length=120, help_text="z. B. imap.gmail.com oder imap.gmx.net")
+    port = models.PositiveIntegerField(default=993)
+    benutzer = models.CharField(max_length=160)
+    passwort_variable = models.CharField(
+        max_length=60,
+        help_text="Name der Umgebungsvariable mit dem App-Passwort, z. B. MAIL_GMX_PASSWORT (steht in der .env).",
+    )
+    ordner = models.CharField(max_length=120, default="INBOX")
+    nur_rechnungen = models.BooleanField(
+        default=True, help_text="Nur Mails, deren Betreff oder Anhang nach Rechnung, Beleg oder Quittung klingt."
+    )
+    aktiv = models.BooleanField(default=True)
+    letzte_uid = models.PositiveBigIntegerField(default=0, editable=False)
+    zuletzt_abgerufen = models.DateTimeField(null=True, blank=True, editable=False)
+
+    class Meta:
+        verbose_name = "Mailkonto"
+        verbose_name_plural = "Mailkonten"
+
+    def __str__(self):
+        return f"{self.name} ({self.benutzer})"
+
+
+class ZuordnungsRegel(models.Model):
+    """Ordnet eingehende Belege anhand von Absender oder Betreff einem Bereich zu."""
+
+    muster = models.CharField(max_length=200, help_text="Regulärer Ausdruck, ohne Groß-/Kleinschreibung.")
+    feld = models.CharField(
+        max_length=10, choices=[("absender", "Absender"), ("betreff", "Betreff"), ("beides", "Absender oder Betreff")],
+        default="beides",
+    )
+    mandant = models.ForeignKey(Mandant, on_delete=models.CASCADE, verbose_name="Bereich")
+    quelle = models.CharField(max_length=10, choices=Beleg.Quelle.choices, blank=True, help_text="Optional: Quelle umsetzen, z. B. Amazon.")
+    reihenfolge = models.PositiveSmallIntegerField(default=100)
+
+    class Meta:
+        verbose_name = "Zuordnungsregel"
+        verbose_name_plural = "Zuordnungsregeln"
+        ordering = ["reihenfolge", "id"]
+
+    def __str__(self):
+        return f"{self.muster} → {self.mandant.kuerzel}"
+
+    def passt(self, absender, betreff):
+        texte = {"absender": [absender], "betreff": [betreff], "beides": [absender, betreff]}[self.feld]
+        return any(re.search(self.muster, t or "", re.I) for t in texte)
